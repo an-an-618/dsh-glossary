@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>术语解释 · showcase</title>
+<style>
+  :root{color-scheme:light}
+  *{box-sizing:border-box}
+  body{margin:0;padding:40px 36px 48px;background:#f2f3f6;color:#1b1f27;
+    font:15px/1.72 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif}
+  .head{max-width:1180px;margin:0 auto 26px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+  .head h1{margin:0;font-size:24px;line-height:34px;font-weight:650;letter-spacing:.2px}
+  .head p{margin:4px 0 0;color:#6b7280;font-size:13px;line-height:20px}
+  .head .hint{flex:none;color:#8a93a3;font-size:12px;line-height:18px;text-align:right}
+  .grid{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+  .panel{display:flex;flex-direction:column;gap:12px;padding:20px 22px 16px;border:1px solid #e4e7ec;
+    border-radius:16px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.04)}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .scene{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;background:#eef3ff;
+    color:#2f5bc4;font-size:12px;line-height:20px;font-weight:600}
+  .panel-head .tip{color:#9aa1ad;font-size:11px;line-height:18px;white-space:nowrap}
+  .ask{margin:0;padding-left:11px;border-left:2px solid #dfe3ea;color:#6b7280;font-size:13px;line-height:21px}
+  .ask b{color:#4b5563;font-weight:600}
+  .answer{font-size:14.5px;line-height:1.82;color:#1b1f27}
+  .answer p{margin:0 0 8px}
+  .answer p:last-child{margin-bottom:0}
+  ._markdown_1ypvv_5{display:block}
+  .card-label{display:flex;align-items:center;gap:6px;color:#9aa1ad;font-size:11px;line-height:18px;margin-top:2px}
+  .card-label i{font-style:normal;color:#4176e6}
+  .showcase-card .dsh-gl-card{position:static!important;left:auto!important;top:auto!important;
+    visibility:visible!important;width:100%!important;max-width:100%!important;max-height:none!important;
+    overflow:visible!important;box-shadow:0 2px 6px rgba(16,24,40,.06),0 12px 28px rgba(16,24,40,.07)}
+  .panel-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-top:auto;padding-top:12px;border-top:1px solid #eef0f3;color:#9aa1ad;font-size:11px;line-height:18px}
+  .panel-foot .hidden-chip{display:inline-flex;align-items:center;gap:5px;color:#7c8494}
+  .panel-foot .count{color:#9aa1ad}
+  .panel-foot .count b{color:#6b7280;font-weight:600}
+  details.raw{margin:0}
+  details.raw summary{cursor:pointer;color:#9aa1ad;font-size:11px;line-height:18px;list-style:none;display:flex;align-items:center;gap:5px}
+  details.raw summary::-webkit-details-marker{display:none}
+  details.raw summary:before{content:"▸";color:#b6bcc7}
+  details.raw[open] summary:before{content:"▾"}
+  details.raw pre{margin:6px 0 0;padding:8px 10px;border-radius:8px;background:#f6f7f9;color:#6b7280;
+    font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+  #done{display:none}
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <h1>术语解释 · Glossary</h1>
+    <p>回答照常写，术语在正文里是蓝色虚线；点一下弹出释义卡，数据块不占位。</p>
+  </div>
+  <div class="hint">真实 client.js 渲染<br>不是手绘稿</div>
+</div>
+<div class="grid" id="grid"></div>
+<div id="done"></div>
+
+<script src="runtime.js"></script>
+<script src="../client.js"></script>
+<script>
+(function () {
+  var api = window.__GLOSSARY__
+  var test = api.__test
+  var grid = document.getElementById('grid')
+  var blocks = []
+
+  /* Four realistic exchanges. Every `entries` item is what the model wrote in
+   * the trailing data block; the visible answer is the prose above it. */
+  var SCENARIOS = [
+    {
+      scene: '工程 · 发布',
+      ask: '我们组下周要灰度，QA 还没测完，我该怎么跟 leader 说？',
+      paragraphs: [
+        '建议先只放 1% 流量，把回滚触发条件写死：错误率超过 0.5% 或 P99 延迟翻倍就自动回滚。',
+        '灰度期间保留熔断开关，别等下游被打穿再人工介入；同时明确 QA 剩余用例的完成时间。',
+      ],
+      entries: [
+        { t: '回滚', forms: ['回滚'], kind: '行话', def: '发现新版本有问题时，把线上服务恢复到上一个稳定版本', more: '通常要提前约定触发条件，比如崩溃率或核心指标跌幅超过阈值就自动或手动回滚，这样灰度出问题时损失可控。', rel: ['灰度', '全量'], basis: '通用' },
+        { t: '熔断', forms: ['熔断'], kind: '专业术语', def: '下游错误率超过阈值时临时切断对它的调用，防止一个故障把整条链路拖垮', more: '熔断器一般有闭合、打开、半开三个状态：先放少量探测请求，确认下游恢复后再完全放行。', rel: ['限流', '降级'], basis: '通用' },
+        { t: 'P99 延迟', forms: ['P99 延迟'], kind: '专业术语', def: '把响应时间从快到慢排序，第 99 百分位那个值，用来看尾部用户有多慢', rel: ['P50', '长尾'], basis: '通用' },
+      ],
+      open: '熔断',
+    },
+    {
+      scene: '学术 · 句法',
+      ask: '语言学里的 Cartography 方法到底在干嘛？',
+      paragraphs: [
+        '简单说，它想给句子的功能层级画一张精细地图：把 CP 拆成 Force、Topic、Focus 等投射，再看话题和焦点分别落在哪一层。',
+        '和传统的整体分析相比，它更关心“每个功能位都有自己的位置”，而不是把所有信息塞进一个节点。',
+      ],
+      entries: [
+        { t: 'CP', forms: ['CP'], kind: '缩写', def: 'Complementizer Phrase，标句词短语，句法树里最外层的句子结构，承载句类和话题信息', more: '“我知道他会来”这类句子里，引导从句的成分就位于 CP。Cartography 认为这一层内部还有更细的分工，于是有了 Split-CP。', rel: ['TP', '标句词'], basis: '通用' },
+        { t: '投射', forms: ['投射'], kind: '学术概念', def: '生成语法术语，指一个核心词带着它的修饰和补足成分扩展成的短语结构', rel: ['中心语', 'X-bar 理论'], basis: '通用' },
+      ],
+      open: 'CP',
+    },
+    {
+      scene: '职场 · 产品',
+      ask: '这个功能上线前，指标上我要准备什么？',
+      paragraphs: [
+        '先对齐口径：把漏斗每一层的埋点补齐，确认转化率算法一致，再排 AB 实验的节奏，别等全量之后才发现两边的指标不可比。',
+        '如果这次只是体验优化，建议先用小流量验证留存，别一上来就追求大盘增长。',
+      ],
+      entries: [
+        { t: '口径', forms: ['口径'], kind: '行话', def: '指标的计算方式和筛选范围；口径不一致时，两边的数字根本没法比', more: '最常见的坑是分子分母的定义不同：一个算首日注册，一个算七日内注册，看起来都是“转化率”。', rel: ['埋点', '指标'], basis: '通用' },
+        { t: '漏斗', forms: ['漏斗'], kind: '行话', def: '把用户从进入到最后完成拆成若干步，看每一步流失了多少人', rel: ['转化率', '留存'], basis: '通用' },
+        { t: 'AB 实验', forms: ['AB 实验'], kind: '缩写', def: '把用户随机分成两组，一组用新版一组用旧版，用指标差异判断改动是否有效', more: '关键在随机分流和样本量：两组人群本身有差异，或者样本太小，结论都会被噪声带偏。', rel: ['显著性', '灰度'], basis: '通用' },
+      ],
+      open: '口径',
+    },
+    {
+      scene: '内部名词 · 上下文推断',
+      ask: 'Galaxy 上的数据和 Quantum 对不上，怎么排查？',
+      context: '（上一轮用户说过：Galaxy 是我们内部的数据湖，Quantum 是跑在它上面的查询引擎）',
+      paragraphs: [
+        '先看 Galaxy 的入库延迟有没有抖动：如果昨天的分区还没就绪，Quantum 查到的自然是旧快照。',
+        'Galaxy 正常的话再查 Quantum 的查询队列，大概率是慢查询把资源占满了。',
+      ],
+      entries: [
+        { t: 'Galaxy', forms: ['Galaxy'], kind: '内部名词', def: '你们内部的数据湖，负责原始数据的入库和存储', more: '它本身不做查询加速，所以下游查询引擎读到的时间取决于入库是否完成。', rel: ['Quantum', '分区'], basis: '上下文推断' },
+        { t: 'Quantum', forms: ['Quantum'], kind: '内部名词', def: '你们内部的查询引擎，跑在数据湖之上，负责把 SQL 变成扫描任务', rel: ['Galaxy', '慢查询'], basis: '上下文推断' },
+      ],
+      open: 'Galaxy',
+    },
+  ]
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag)
+    if (className) node.className = className
+    if (text !== undefined) node.textContent = text
+    return node
+  }
+
+  function buildPanel(scenario, index) {
+    var panel = el('section', 'panel')
+    var head = el('div', 'panel-head')
+    head.appendChild(el('span', 'scene', scenario.scene))
+    head.appendChild(el('span', 'tip', '正文里的术语可点击'))
+    panel.appendChild(head)
+
+    var ask = el('p', 'ask')
+    ask.appendChild(el('b', null, '用户：'))
+    ask.appendChild(document.createTextNode(scenario.ask))
+    panel.appendChild(ask)
+    if (scenario.context) {
+      var context = el('p', 'ask')
+      context.style.borderLeftColor = 'transparent'
+      context.style.paddingLeft = '0'
+      context.textContent = scenario.context
+      panel.appendChild(context)
+    }
+
+    /* The rendered answer, structured like the shipped Markdown output:
+     * paragraphs, then the raw <dsh:glossary> html block as a text node, then
+     * the JSON paragraph. */
+    var answer = el('div', 'answer')
+    answer.setAttribute('data-chat-flow-kind', 'assistant-step')
+    answer.setAttribute('data-chat-turn', String(index + 1))
+    var markdown = el('div', '_markdown_1ypvv_5')
+    for (var p = 0; p < scenario.paragraphs.length; p++) markdown.appendChild(el('p', null, scenario.paragraphs[p]))
+    /* The rendered shape: bare tag text plus the escaped closing tag, all in
+     * the last paragraph. */
+    var jsonParagraph = el('p', 'raw-block', 'dsh:glossary\n' + JSON.stringify(scenario.entries) + '\n</dsh:glossary>')
+    markdown.appendChild(jsonParagraph)
+    answer.appendChild(markdown)
+    panel.appendChild(answer)
+
+    var label = el('div', 'card-label')
+    label.appendChild(document.createTextNode('点开「'))
+    label.appendChild(el('i', null, scenario.open))
+    label.appendChild(document.createTextNode('」：'))
+    panel.appendChild(label)
+
+    var cardHost = el('div', 'showcase-card')
+    panel.appendChild(cardHost)
+
+    var foot = el('div', 'panel-foot')
+    var hiddenChip = el('span', 'hidden-chip', '数据块已隐藏 · 会话原文仍保留')
+    foot.appendChild(hiddenChip)
+    var count = el('span', 'count')
+    count.appendChild(document.createTextNode('标注 '))
+    count.appendChild(el('b', null, String(scenario.entries.length)))
+    count.appendChild(document.createTextNode(' 个术语'))
+    foot.appendChild(count)
+    panel.appendChild(foot)
+
+    var raw = el('details', 'raw')
+    raw.appendChild(el('summary', null, '看会话原文里的数据块'))
+    raw.appendChild(el('pre', null, '<dsh:glossary>\n' + JSON.stringify(scenario.entries, null, 2)))
+    panel.appendChild(raw)
+
+    grid.appendChild(panel)
+    return { panel: panel, row: answer, cardHost: cardHost, scenario: scenario }
+  }
+
+  function boot() {
+    var style = document.createElement('style')
+    style.textContent = test.CSS
+    document.head.appendChild(style)
+
+    var panels = SCENARIOS.map(buildPanel)
+
+    /* Real decorator: hides the block, marks the terms. */
+    test.decorateVisibleRows()
+
+    /* Render the real card for each panel's featured term. The store is read
+     * once per render, so panels do not fight over one open card. */
+    for (var i = 0; i < panels.length; i++) {
+      var panel = panels[i]
+      var parsed = test.parseGlossaryText(panel.row.textContent)
+      if (parsed === null) throw new Error('missing block for ' + panel.scenario.scene)
+      var entry = null
+      for (var e = 0; e < parsed.entries.length; e++) {
+        if (parsed.entries[e].t === panel.scenario.open) entry = parsed.entries[e]
+      }
+      if (entry === null) entry = parsed.entries[0]
+      test.openPopover(entry, { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 })
+      window.__showcaseRender(test.components.GlossaryCard, {
+        t: function (key) { return api.MESSAGES.zh[key] || key },
+      }, panel.cardHost)
+    }
+
+    document.getElementById('done').setAttribute('data-ready', '')
+    window.__READY__ = true
+  }
+
+  try {
+    boot()
+  } catch (error) {
+    document.body.insertAdjacentHTML('beforeend', '<pre style="color:#b42318">' + String(error && error.stack) + '</pre>')
+    window.__READY__ = true
+    window.__ERROR__ = String(error && error.stack)
+  }
+})()
+</script>
+</body>
+</html>

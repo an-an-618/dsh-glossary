@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Glossary">
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#4176E6" fill-opacity="0.12"/>
+  <path d="M32 14 L20.5 44" stroke="#4176E6" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M32 14 L43.5 44" stroke="#4176E6" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M24.5 34 H39.5" stroke="#4176E6" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M18 51 H46" stroke="#4176E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4" fill="none"/>
+</svg>

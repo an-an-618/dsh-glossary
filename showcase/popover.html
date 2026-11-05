@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>术语解释 · 对话里的样子</title>
+<style>
+  :root{color-scheme:light}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:#f2f3f6;color:#1b1f27;
+    font:15px/1.78 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:44px 24px 80px}
+  .bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;color:#9aa1ad;font-size:12px}
+  .bar .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3aa675;margin-right:6px}
+  .user{display:flex;justify-content:flex-end;margin:0 0 22px}
+  .bubble{max-width:78%;padding:11px 15px;border-radius:16px 16px 4px 16px;background:#e8ecf3;color:#26303f;
+    font-size:14.5px;line-height:1.7}
+  .answer{font-size:15px;line-height:1.86}
+  .answer p{margin:0 0 11px}
+  ._markdown_1ypvv_5{display:block}
+  .note{max-width:420px;margin:330px 0 0;color:#9aa1ad;font-size:11px;line-height:17px}
+  #done{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><span><span class="dot"></span>真实 client.js 渲染 · 点击正文里的虚线术语</span><span>术语解释</span></div>
+  <div class="user"><div class="bubble">我们组下周要灰度，QA 还没测完，我该怎么跟 leader 说？</div></div>
+  <div class="answer" id="answer" data-chat-flow-kind="assistant-step" data-chat-turn="1">
+    <div class="_markdown_1ypvv_5">
+      <p>建议先只放 1% 流量，把回滚触发条件写死：错误率超过 0.5% 或 P99 延迟翻倍就自动回滚。</p>
+      <p>灰度期间保留熔断开关，别等下游被打穿再人工介入；同时明确 QA 剩余用例的完成时间。</p>
+    </div>
+  </div>
+  <div id="card-host"></div>
+  <p class="note">点一下正文里的虚线术语，就地弹出释义卡；正文末尾的数据块已折叠，不占位。</p>
+</div>
+<div id="done"></div>
+
+<script src="runtime.js"></script>
+<script src="../client.js"></script>
+<script>
+(function () {
+  var api = window.__GLOSSARY__
+  var test = api.__test
+  var ENTRIES = [
+    { t: '回滚', forms: ['回滚'], kind: '行话', def: '发现新版本有问题时，把线上服务恢复到上一个稳定版本', more: '通常要提前约定触发条件，比如崩溃率或核心指标跌幅超过阈值就自动或手动回滚。', rel: ['灰度', '全量'], basis: '通用' },
+    { t: '熔断', forms: ['熔断'], kind: '专业术语', def: '下游错误率超过阈值时临时切断对它的调用，防止一个故障把整条链路拖垮', more: '熔断器一般有闭合、打开、半开三个状态：先放少量探测请求，确认下游恢复后再完全放行。', rel: ['限流', '降级'], basis: '通用' },
+    { t: 'P99 延迟', forms: ['P99 延迟'], kind: '专业术语', def: '把响应时间从快到慢排序，第 99 百分位那个值，用来看尾部用户有多慢', rel: ['P50', '长尾'], basis: '通用' },
+  ]
+
+  try {
+    var style = document.createElement('style')
+    style.textContent = test.CSS
+    document.head.appendChild(style)
+
+    var markdown = document.querySelector('#answer ._markdown_1ypvv_5')
+    var jsonParagraph = document.createElement('p')
+    jsonParagraph.textContent = 'dsh:glossary\n' + JSON.stringify(ENTRIES) + '\n</dsh:glossary>'
+    markdown.appendChild(jsonParagraph)
+
+    test.decorateVisibleRows()
+
+    /* Open the card exactly like a click does: same entry, same anchor rect. */
+    var marks = Array.from(document.querySelectorAll('[data-dsh-gl-mark]'))
+    var mark = marks.filter(function (item) { return item.textContent === '熔断' })[0] || marks[0]
+    var entry = ENTRIES.filter(function (item) { return item.t === mark.textContent })[0]
+    test.openPopover(entry, mark.getBoundingClientRect())
+    window.__showcaseRender(test.components.GlossaryCard, {
+      t: function (key) { return api.MESSAGES.zh[key] || key },
+    }, document.getElementById('card-host'))
+
+    window.__READY__ = true
+  } catch (error) {
+    document.body.insertAdjacentHTML('beforeend', '<pre style="color:#b42318">' + String(error && error.stack) + '</pre>')
+    window.__READY__ = true
+    window.__ERROR__ = String(error && error.stack)
+  }
+})()
+</script>
+</body>
+</html>

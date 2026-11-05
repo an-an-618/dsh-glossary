@@ -1,0 +1,27 @@
+# Bundle layer for @an-an-618/dsh-glossary.
+#
+# One Host row carries both halves:
+#   * index.js + lib/  the system-prompt section with the glossary rules and the
+#                      live configuration values;
+#   * client.js        the browser half discovered from `dsh.client`: it finds
+#                      the trailing <dsh:glossary> block in a finished answer,
+#                      hides it, marks the terms in the body and opens the
+#                      definition card on click.
+- insert:
+    - id: glossary
+      name: '@an-an-618/dsh-glossary'
+      config:
+        enabled: true
+        # Terms per turn, clamped to 1-8.
+        max_terms: 5
+        # One-sentence definition cap (Chinese characters; ~25 English words).
+        def_max: 40
+        # Expanded definition cap (Chinese characters; ~90 English words).
+        more_max: 150
+        # follow_user -> definitions follow the user's language
+        # zh / en     -> also fixes the rule language
+        language: follow_user
+        # relaxed  -> skip only when there is really nothing (coding answers fire)
+        # standard -> the original contract
+        # strict   -> also skip borderline words and short answers
+        strictness: relaxed

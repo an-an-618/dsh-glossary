@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>glossary fixture</title>
+<style>
+  body{margin:0;background:#fff;color:#1b1f27;font:14px/1.7 -apple-system,"PingFang SC",sans-serif;padding:28px}
+  .frame{max-width:620px;margin:0 auto}
+  ._markdown_1ypvv_5 p{margin:0 0 12px}
+  #report{margin-top:24px;padding:10px 12px;border-radius:8px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;background:#f5f6f9}
+  #report[data-tone="ok"]{background:#e8f5ec;color:#12643a}
+  #report[data-tone="fail"]{background:#fdecec;color:#a12020}
+  #card-host{min-height:300px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div id="chat">
+    <div data-chat-flow id="flow">
+      <div data-chat-flow-kind="assistant-step" data-chat-turn="9" id="answer">
+        <div class="_markdown_1ypvv_5">
+          <p>我们组下周要灰度，先把<strong>回滚</strong>的触发条件写清楚。</p>
+          <p>QA 那边的<em>用例</em>还没跑完，建议只放 1% 流量。</p>
+          <p>文中还会再出现一次回滚，这一段只是正文的延续，用来确认正文没有被改动。</p>
+        </div>
+      </div>
+      <div data-chat-flow-kind="assistant-step" data-chat-turn="8" id="answer-empty">
+        <div class="_markdown_1ypvv_5">
+          <p>这一行只是普通正文，没有任何需要解释的词。</p>
+        </div>
+      </div>
+      <div data-chat-flow-kind="assistant-step" data-chat-turn="6" id="answer-many">
+        <div class="_markdown_1ypvv_5">
+          <p>正文里一次出现 词0、词1、词2、词3、词4 这五个词。</p>
+        </div>
+      </div>
+      <div data-chat-flow-kind="assistant-step" data-chat-turn="6" id="answer-trailing">
+        <div class="_markdown_1ypvv_5">
+          <p>正文提到回滚，也提了一次冷启动。</p>
+        </div>
+      </div>
+      <div data-chat-flow-kind="assistant-step" data-chat-turn="7" id="answer-mention">
+        <div class="_markdown_1ypvv_5">
+          <p>正文里提到 <code>dsh:glossary</code> 这个标签，但后面并没有数据块，所以这段不能被吞掉。</p>
+        </div>
+      </div>
+      <div data-chat-flow-kind="turn-tail" data-chat-turn="9"></div>
+    </div>
+  </div>
+  <div id="card-host"></div>
+  <div id="report">running…</div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * Fake module loader + a tiny React runtime (createElement + hooks +
+ * a DOM renderer). The shipped app supplies the real ones.
+ * ------------------------------------------------------------------ */
+(function () {
+  function h(type, props) {
+    var children = []
+    for (var i = 2; i < arguments.length; i++) children.push(arguments[i])
+    var merged = {}
+    if (props) for (var key in props) if (key !== 'key') merged[key] = props[key]
+    merged.children = children.length === 0 ? undefined : children.length === 1 ? children[0] : children
+    return { type: type, props: merged }
+  }
+
+  var hooks = { cells: [], effectDeps: [], cursor: 0, effects: [] }
+  var mounted = { component: null, props: null, container: null }
+  var rendering = false
+  var pending = false
+
+  function scheduleRender() {
+    if (mounted.component === null) return
+    if (rendering) {
+      pending = true
+      return
+    }
+    render(mounted.component, mounted.props, mounted.container)
+  }
+
+  var React = {
+    createElement: h,
+    memo: function (component) { return component },
+    useState: function (initial) {
+      var index = hooks.cursor++
+      if (!(index in hooks.cells)) hooks.cells[index] = typeof initial === 'function' ? initial() : initial
+      return [hooks.cells[index], function (next) {
+        var value = typeof next === 'function' ? next(hooks.cells[index]) : next
+        if (Object.is(value, hooks.cells[index])) return
+        hooks.cells[index] = value
+        scheduleRender()
+      }]
+    },
+    useRef: function (initial) {
+      var index = hooks.cursor++
+      if (!(index in hooks.cells)) hooks.cells[index] = { current: initial }
+      return hooks.cells[index]
+    },
+    useEffect: function (effect, deps) { hooks.effects.push({ index: hooks.cursor++, effect: effect, deps: deps }) },
+    useLayoutEffect: function (effect, deps) { hooks.effects.push({ index: hooks.cursor++, effect: effect, deps: deps }) },
+    useSyncExternalStore: function (subscribe, getSnapshot) {
+      var index = hooks.cursor++
+      if (!(index in hooks.cells)) {
+        hooks.cells[index] = getSnapshot()
+        subscribe(function () {
+          var next = getSnapshot()
+          if (hooks.cells[index] === next) return
+          hooks.cells[index] = next
+          scheduleRender()
+        })
+      }
+      return hooks.cells[index]
+    },
+  }
+
+  function toDom(node) {
+    if (node === null || node === undefined || node === false || node === true) return document.createTextNode('')
+    if (Array.isArray(node)) {
+      var fragment = document.createDocumentFragment()
+      for (var i = 0; i < node.length; i++) fragment.appendChild(toDom(node[i]))
+      return fragment
+    }
+    if (typeof node === 'string' || typeof node === 'number') return document.createTextNode(String(node))
+    if (typeof node.type === 'function') return toDom(node.type(node.props))
+    var element = document.createElement(node.type)
+    var props = node.props || {}
+    for (var name in props) {
+      if (name === 'children' || name === 'ref' || name === 'tabIndex') continue
+      var value = props[name]
+      if (name === 'style' && value && typeof value === 'object') {
+        for (var styleName in value) element.style[styleName] = value[styleName]
+      } else if (name === 'className') {
+        element.className = value
+      } else if (typeof value === 'function' && name.indexOf('on') === 0) {
+        element.addEventListener(name.slice(2).toLowerCase(), value)
+      } else if (value !== undefined && value !== null && value !== false) {
+        element.setAttribute(name, value === true ? '' : String(value))
+      }
+    }
+    if (props.tabIndex !== undefined) element.setAttribute('tabindex', String(props.tabIndex))
+    var children = props.children
+    var list = Array.isArray(children) ? children : [children]
+    for (var j = 0; j < list.length; j++) element.appendChild(toDom(list[j]))
+    return element
+  }
+
+  function render(component, props, container) {
+    mounted.component = component
+    mounted.props = props
+    mounted.container = container
+    var iterations = 0
+    do {
+      pending = false
+      rendering = true
+      hooks.cursor = 0
+      hooks.effects = []
+      container.textContent = ''
+      container.appendChild(toDom(component(props)))
+      var effects = hooks.effects
+      for (var i = 0; i < effects.length; i++) {
+        var entry = effects[i]
+        var previous = hooks.effectDeps[entry.index]
+        var changed = !entry.deps || !previous || entry.deps.length !== previous.length
+        if (!changed) {
+          for (var d = 0; d < entry.deps.length; d++) {
+            if (!Object.is(entry.deps[d], previous[d])) { changed = true; break }
+          }
+        }
+        if (!changed) continue
+        hooks.effectDeps[entry.index] = entry.deps
+        entry.effect()
+      }
+      rendering = false
+      iterations += 1
+    } while (pending && iterations < 5)
+  }
+
+  window.__fixtureRender = render
+  window.__ModuleLoader__ = {
+    load: function (definition) {
+      window.__GLOSSARY__ = definition.factory(function (id) {
+        if (id === 'react') return React
+        throw new Error('unexpected require: ' + id)
+      })
+    },
+  }
+})()
+</script>
+
+<script src="../client.js"></script>
+
+<script>
+(function () {
+  var api = window.__GLOSSARY__
+  var test = api.__test
+  var report = document.getElementById('report')
+  var failures = []
+  var notes = []
+  var marks = []
+
+  function ok(name, condition, detail) {
+    if (condition) notes.push('ok   ' + name)
+    else failures.push(name + (detail === undefined ? '' : ': ' + detail))
+  }
+
+  function finish() {
+    report.textContent = failures.length === 0
+      ? 'PASS\n' + notes.join('\n')
+      : 'FAIL\n' + failures.map(function (item) { return 'FAIL ' + item }).join('\n') + '\n\n' + notes.join('\n')
+    report.setAttribute('data-tone', failures.length === 0 ? 'ok' : 'fail')
+    document.title = failures.length === 0 ? 'ok' : 'fail'
+    window.__RESULT__ = { ok: failures.length === 0, failures: failures, notes: notes }
+  }
+
+  function visibleText() {
+    var walker = document.createTreeWalker(document.getElementById('chat'), 4)
+    var out = ''
+    var node = walker.nextNode()
+    while (node) {
+      var element = node.parentElement
+      var hidden = false
+      while (element) {
+        if (window.getComputedStyle(element).display === 'none') { hidden = true; break }
+        element = element.parentElement
+      }
+      if (!hidden) out += node.nodeValue
+      node = walker.nextNode()
+    }
+    return out
+  }
+
+  try {
+    /* Build the two-part body the model writes, exactly like the shipped
+     * Markdown renderer lays it out: prose paragraphs, then the raw
+     * <dsh:glossary> html block as a bare text node, then the JSON text. */
+    var markdown = document.querySelector('._markdown_1ypvv_5')
+    var json = JSON.stringify([
+      { t: '回滚', forms: ['回滚'], kind: '行话', def: '发现新版本有问题时，把线上服务恢复到上一个稳定版本', more: '通常需要提前约定触发条件，比如崩溃率超过阈值就回滚，这样灰度出问题时损失可控。', rel: ['灰度', '全量'], basis: '通用' },
+      { t: '测试用例', forms: ['用例'], kind: '专业术语', def: '一条具体的测试步骤及其预期结果，用来检验某个功能是否正常', rel: ['QA', '冒烟测试'], basis: '通用' },
+    ])
+    /* The shipped renderer drops the opening angle brackets and escapes the
+     * closing tag, so the rendered paragraph reads exactly like this. */
+    var jsonParagraph = document.createElement('p')
+    jsonParagraph.id = 'json-block'
+    jsonParagraph.textContent = 'dsh:glossary\n' + json + '\n</dsh:glossary>'
+    markdown.appendChild(jsonParagraph)
+
+    /* Install the real plugin style + the real delegated listeners. */
+    var style = document.createElement('style')
+    style.textContent = test.CSS
+    document.head.appendChild(style)
+    document.addEventListener('click', test.handleClick, false)
+    document.addEventListener('keydown', test.handleKeyDown, true)
+
+    /* Phase A: decorate and hide, no card yet. */
+    ok('decorated one row', test.decorateVisibleRows() === 1)
+    marks = Array.prototype.slice.call(document.querySelectorAll('[data-dsh-gl-mark]'))
+    ok('marks found', marks.length === 2, String(marks.length))
+    ok('mark text is the written form', marks.map(function (mark) { return mark.textContent }).join(',') === '回滚,用例')
+    ok('json paragraph is hidden', jsonParagraph.style.display === 'none', 'display=' + jsonParagraph.style.display)
+    ok('tag node is wrapped in a hidden span', markdown.querySelector('.dsh-gl-hidden') !== null)
+    var visible = visibleText()
+    ok('no raw tag in visible text', visible.indexOf('<dsh:glossary>') < 0)
+    ok('no JSON in visible text', visible.indexOf('"forms"') < 0, visible.slice(-120))
+    ok('body text survives intact', visible.indexOf('我们组下周要灰度') >= 0 && visible.indexOf('这一段只是正文的延续') >= 0)
+    ok('card closed initially', test.getPopover() === null)
+
+    /* A five-entry block contains ten nested arrays before its own opening
+     * bracket; the parser must still pair the row-final bracket correctly. */
+    var manyRow = document.getElementById('answer-many')
+    var manyMarkdown = manyRow.querySelector('._markdown_1ypvv_5')
+    var manyEntries = [0, 1, 2, 3, 4].map(function (index) {
+      return { t: '词' + index, forms: ['词' + index], kind: '专业术语', def: '第 ' + index + ' 个词的释义', rel: ['甲', '乙'], basis: '通用' }
+    })
+    var manyJson = document.createElement('p')
+    manyJson.textContent = 'dsh:glossary\n' + JSON.stringify(manyEntries) + '\n</dsh:glossary>'
+    manyMarkdown.appendChild(manyJson)
+    test.decorateVisibleRows()
+    ok('five-entry block is hidden', manyJson.style.display === 'none')
+    ok('five-entry block marks every term', manyRow.querySelectorAll('[data-dsh-gl-mark]').length === 5, String(manyRow.querySelectorAll('[data-dsh-gl-mark]').length))
+
+    /* Block + trailing text (the strict parser rejects it, the leak guard folds it). */
+    var trailingRow = document.getElementById('answer-trailing')
+    var trailingMarkdown = trailingRow.querySelector('._markdown_1ypvv_5')
+    var trailingJson = document.createElement('p')
+    trailingJson.textContent = 'dsh:glossary\n' + JSON.stringify([{ t: '回滚', forms: ['回滚'], kind: '行话', def: '恢复上一个稳定版本', basis: '通用' }]) + '\n</dsh:glossary>\n这一行是块后面的正文，不能被藏。'
+    trailingMarkdown.appendChild(trailingJson)
+    test.decorateVisibleRows()
+    ok('trailing-text block is hidden anyway', trailingJson.querySelector('[data-dsh-gl-hidden]') !== null)
+    ok('trailing text after the block survives', trailingRow.textContent.indexOf('不能被藏') >= 0)
+    ok('trailing-text block still marks its term', trailingRow.querySelectorAll('[data-dsh-gl-mark]').length >= 1)
+
+    /* A prose mention of the tag must not be treated as a block. */
+    var mentionRow = document.getElementById('answer-mention')
+    ok('prose tag mention is left alone', mentionRow.querySelectorAll('[data-dsh-gl-hidden]').length === 0)
+    ok('prose tag mention keeps its text', mentionRow.textContent.indexOf('不能被吞掉') >= 0)
+
+    /* A block with no markable entry must still be hidden, exactly once. */
+    var emptyRow = document.getElementById('answer-empty')
+    var emptyMarkdown = emptyRow.querySelector('._markdown_1ypvv_5')
+    var emptyJson = document.createElement('p')
+    emptyJson.textContent = 'dsh:glossary\n[]\n</dsh:glossary>'
+    emptyMarkdown.appendChild(emptyJson)
+    test.decorateVisibleRows()
+    ok('hide-only block is hidden', emptyJson.style.display === 'none')
+    var hiddenBefore = emptyRow.querySelectorAll('[data-dsh-gl-hidden]').length
+    test.decorateVisibleRows()
+    ok('hide-only row is not rewritten every tick', emptyRow.querySelectorAll('[data-dsh-gl-hidden]').length === hiddenBefore)
+    ok('hide-only row has no marks', emptyRow.querySelectorAll('[data-dsh-gl-mark]').length === 0)
+    window.__READY__ = true
+
+    /* Phase B: click a mark, then render the card. */
+    window.__OPEN_CARD__ = function () {
+      marks[0].click()
+      var state = test.getPopover()
+      ok('click opens the card', state !== null)
+      ok('card carries the clicked entry', state !== null && state.entry.t === '回滚', state && state.entry.t)
+      ok('card carries the expanded definition', state !== null && state.entry.more.length > 0)
+      if (state === null) return
+      window.__fixtureRender(test.components.GlossaryCard, {
+        t: function (key) { return api.MESSAGES.zh[key] || key },
+      }, document.getElementById('card-host'))
+      var card = document.querySelector('[data-dsh-gl-card]')
+      ok('card rendered in the DOM', card !== null)
+      if (card === null) return
+      ok('card shows the term', card.textContent.indexOf('回滚') >= 0)
+      ok('card shows the definition', card.textContent.indexOf('恢复到上一个稳定版本') >= 0)
+      ok('card shows the type badge', card.textContent.indexOf('行话') >= 0)
+      ok('card shows related words', card.textContent.indexOf('灰度') >= 0 && card.textContent.indexOf('全量') >= 0)
+      ok('card is positioned', card.style.left !== '' && card.style.top !== '')
+    }
+
+    /* Phase C: idempotency, then restore the source. */
+    window.__FINISH__ = function () {
+      var before = document.querySelectorAll('[data-dsh-gl-mark]').length
+      test.decorateVisibleRows()
+      ok('second pass does not double-mark', document.querySelectorAll('[data-dsh-gl-mark]').length === before)
+      test.restoreAll()
+      ok('restore removes marks', document.querySelectorAll('[data-dsh-gl-mark]').length === 0)
+      ok('restore shows the block again', document.getElementById('chat').textContent.indexOf('dsh:glossary') >= 0)
+      finish()
+    }
+  } catch (error) {
+    failures.push('exception: ' + (error && error.stack ? error.stack : String(error)))
+    finish()
+  }
+})()
+</script>
+</body>
+</html>
